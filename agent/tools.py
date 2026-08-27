@@ -1,5 +1,25 @@
-tasks = []
+import json
+import os
 
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TASKS_FILE = os.path.join(BASE_DIR, "tasks.json")
+
+
+def load_tasks():
+    if not os.path.exists(TASKS_FILE):
+        return []
+
+    with open(TASKS_FILE, "r") as file:
+        return json.load(file)
+
+
+def save_tasks():
+    with open(TASKS_FILE, "w") as file:
+        json.dump(tasks, file, indent=2)
+
+
+tasks = load_tasks()
 
 def create_task(title: str, description: str = "") -> dict:
     """Create a new task and add it to the task list."""
@@ -11,6 +31,7 @@ def create_task(title: str, description: str = "") -> dict:
     }
 
     tasks.append(task)
+    save_tasks()
 
     return {
         "success": True,
@@ -42,6 +63,7 @@ def complete_task(task_id: int, confirmation: str = "") -> dict:
                 }
 
             task["status"] = "completed"
+            save_tasks()
 
             return {
                 "success": True,
