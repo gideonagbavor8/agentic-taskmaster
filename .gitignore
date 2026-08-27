@@ -1,3 +1,6 @@
 credentials.json
 token.json
 tasks.json
+agent/.env
+__pycache__/
+*.pyc

@@ -24,7 +24,7 @@ tasks = load_tasks()
 def create_task(title: str, description: str = "") -> dict:
     """Create a new task and add it to the task list."""
     task = {
-        "id": len(tasks) + 1,
+        "id": max((task["id"] for task in tasks), default=0) + 1,
         "title": title,
         "description": description,
         "status": "pending",
@@ -46,6 +46,34 @@ def list_tasks() -> dict:
         "tasks": tasks,
     }
 
+def start_task(task_id: int) -> dict:
+    """Mark a pending task as in progress."""
+    for task in tasks:
+        if task["id"] == task_id:
+            if task["status"] == "completed":
+                return {
+                    "success": False,
+                    "error": f"Task {task_id} is already completed.",
+                }
+
+            if task["status"] == "in_progress":
+                return {
+                    "success": False,
+                    "error": f"Task {task_id} is already in progress.",
+                }
+
+            task["status"] = "in_progress"
+            save_tasks()
+
+            return {
+                "success": True,
+                "task": task,
+            }
+
+    return {
+        "success": False,
+        "error": f"Task {task_id} was not found.",
+    }
 
 def complete_task(task_id: int, confirmation: str = "") -> dict:
     """Mark a task as completed only when the user confirms the work is actually done."""
