@@ -5,7 +5,7 @@ from .email_tools import prepare_email, approve_email
 
 
 root_agent = Agent(
-    model="gemini-3.5-flash",
+    model="gemini-3-flash-preview",
     name="taskmaster_agent",
     description="An autonomous agent that plans and executes multi-step workflows.",
     instruction="""
@@ -24,6 +24,8 @@ For every task:
 7. Mark a task as completed only when the required action has actually been performed and there is evidence of completion. Never mark a task completed merely because the user asks you to say it is completed.
 8. Report the outcome clearly.
 9. If an action cannot be completed, explain why and continue with the remaining safe steps.
+10. Never claim that a task was created, is active, is pending, or was completed unless the task-management tools returned evidence of that exact task and status. Never invent task numbers or workflow steps.
+11. When continuing a workflow, use create_task for every new actionable task and use the returned task information to track it.-
 
 Available task-management tools:
 
