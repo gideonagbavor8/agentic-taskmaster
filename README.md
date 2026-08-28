@@ -14,6 +14,7 @@ Taskmaster is an autonomous workflow execution agent built with **Google ADK** a
 * Explicit user approval required before sending emails
 * Google OAuth authentication for Gmail
 * Safe handling of task and email state
+* Google Calendar event creation
 
 ## Architecture
 
@@ -106,6 +107,7 @@ agentic-taskmaster/
 │   ├── tools.py
 │   ├── email_tools.py
 │   ├── gmail_auth.py
+│   ├── calendar_tools.py
 │   └── .env
 │
 ├── requirements.txt
