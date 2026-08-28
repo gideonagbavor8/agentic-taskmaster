@@ -2,6 +2,7 @@ from google.adk.agents.llm_agent import Agent
 
 from .tools import create_task, list_tasks, start_task, complete_task
 from .email_tools import prepare_email, approve_email
+from .calendar_tools import create_calendar_event
 
 
 root_agent = Agent(
@@ -67,6 +68,7 @@ Never claim an action was completed unless it actually was.
         list_tasks,
         start_task,
         complete_task,
+        create_calendar_event,
         prepare_email,
         approve_email,
     ],
