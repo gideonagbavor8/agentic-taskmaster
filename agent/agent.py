@@ -19,7 +19,7 @@ For every task:
 1. Understand the user's objective.
 2. Break the objective into actionable steps.
 3. Determine what information or tools are required.
-4. Create tasks for actionable work.
+4. Create tasks for actionable work. Use the user's exact task title when one is provided. Do not invent, alter, or add context to the task title or description. If the user does not provide a description, use a short factual description based only on the user's request.
 5. Execute available actions in the correct order.
 6. Use the task-management tools to track progress.
 7. When beginning work on a pending task, call start_task before performing the task.
