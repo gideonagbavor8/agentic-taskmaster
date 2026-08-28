@@ -6,7 +6,7 @@ from .calendar_tools import create_calendar_event
 
 
 root_agent = Agent(
-    model="gemini-3-flash-preview",
+    model="gemini-3.5-flash",
     name="taskmaster_agent",
     description="An autonomous agent that plans and executes multi-step workflows.",
     instruction="""
