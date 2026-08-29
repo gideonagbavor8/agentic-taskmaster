@@ -1,37 +1,39 @@
-import json
-import os
+from google.cloud import firestore
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TASKS_FILE = os.path.join(BASE_DIR, "tasks.json")
+PROJECT_ID = "gen-lang-client-0349849444"
+DATABASE_ID = "taskflow-db"
+COLLECTION_NAME = "tasks"
 
+db = firestore.Client(
+    project=PROJECT_ID,
+    database=DATABASE_ID,
+)
 
-def load_tasks():
-    if not os.path.exists(TASKS_FILE):
-        return []
+tasks_collection = db.collection(COLLECTION_NAME)
 
-    with open(TASKS_FILE, "r") as file:
-        return json.load(file)
-
-
-def save_tasks():
-    with open(TASKS_FILE, "w") as file:
-        json.dump(tasks, file, indent=2)
-
-
-tasks = load_tasks()
 
 def create_task(title: str, description: str = "") -> dict:
-    """Create a new task and add it to the task list."""
+    """Create a new task in Firestore."""
+
+    existing_tasks = list(tasks_collection.stream())
+
+    task_id = max(
+        (
+            doc.to_dict().get("id", 0)
+            for doc in existing_tasks
+        ),
+        default=0,
+    ) + 1
+
     task = {
-        "id": max((task["id"] for task in tasks), default=0) + 1,
+        "id": task_id,
         "title": title,
         "description": description,
         "status": "pending",
     }
 
-    tasks.append(task)
-    save_tasks()
+    tasks_collection.document(str(task_id)).set(task)
 
     return {
         "success": True,
@@ -41,64 +43,86 @@ def create_task(title: str, description: str = "") -> dict:
 
 def list_tasks() -> dict:
     """Return all tasks currently tracked by Taskmaster."""
+
+    documents = tasks_collection.stream()
+
+    tasks = [doc.to_dict() for doc in documents]
+    tasks.sort(key=lambda task: task.get("id", 0))
+
     return {
         "success": True,
         "tasks": tasks,
     }
 
+
 def start_task(task_id: int) -> dict:
     """Mark a pending task as in progress."""
-    for task in tasks:
-        if task["id"] == task_id:
-            if task["status"] == "completed":
-                return {
-                    "success": False,
-                    "error": f"Task {task_id} is already completed.",
-                }
 
-            if task["status"] == "in_progress":
-                return {
-                    "success": False,
-                    "error": f"Task {task_id} is already in progress.",
-                }
+    task_ref = tasks_collection.document(str(task_id))
+    task_snapshot = task_ref.get()
 
-            task["status"] = "in_progress"
-            save_tasks()
+    if not task_snapshot.exists:
+        return {
+            "success": False,
+            "error": f"Task {task_id} was not found.",
+        }
 
-            return {
-                "success": True,
-                "task": task,
-            }
+    task = task_snapshot.to_dict()
+
+    if task["status"] == "completed":
+        return {
+            "success": False,
+            "error": f"Task {task_id} is already completed.",
+        }
+
+    if task["status"] == "in_progress":
+        return {
+            "success": False,
+            "error": f"Task {task_id} is already in progress.",
+        }
+
+    task["status"] = "in_progress"
+    task_ref.set(task)
 
     return {
-        "success": False,
-        "error": f"Task {task_id} was not found.",
+        "success": True,
+        "task": task,
     }
 
+
 def complete_task(task_id: int, confirmation: str = "") -> dict:
-    """Mark a task as completed only when the user confirms the work is actually done."""
-    for task in tasks:
-        if task["id"] == task_id:
-            if not confirmation.strip():
-                return {
-                    "success": False,
-                    "error": "Task cannot be completed without confirmation that the work was actually performed.",
-                }
-            if task["status"] == "completed":
-                return {
-                    "success": False,
-                    "error": f"Task {task_id} is already completed.",
-                }
+    """Mark a task as completed only when confirmation is provided."""
 
-            task["status"] = "completed"
-            save_tasks()
+    if not confirmation.strip():
+        return {
+            "success": False,
+            "error": (
+                "Task cannot be completed without confirmation "
+                "that the work was actually performed."
+            ),
+        }
 
-            return {
-                "success": True,
-                "task": task,
-            }
+    task_ref = tasks_collection.document(str(task_id))
+    task_snapshot = task_ref.get()
+
+    if not task_snapshot.exists:
+        return {
+            "success": False,
+            "error": f"Task {task_id} was not found.",
+        }
+
+    task = task_snapshot.to_dict()
+
+    if task["status"] == "completed":
+        return {
+            "success": False,
+            "error": f"Task {task_id} is already completed.",
+        }
+
+    task["status"] = "completed"
+    task_ref.set(task)
 
     return {
-        "success": False,
-        "error": f"Task {task_id} was not found.",
+        "success": True,
+        "task": task,
     }
